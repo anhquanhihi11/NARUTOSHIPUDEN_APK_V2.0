@@ -3,7 +3,8 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CẬP NHẬT VIEWPORT: Ngăn chặn hoàn toàn hành động phóng to (zoom) của trình duyệt di động -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>NARUTO SHIPPUDEN - Hokage Console V6.0 Premium</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -54,13 +55,21 @@
         body {
             font-family: 'Rajdhani', sans-serif;
             background-color: #020204;
-            /* Cải tiến màu nền: Sử dụng dải màu tím đen cực sâu phối với sắc cam rực lửa và xanh điện tử ma mị tạo cảm giác không gian đa chiều cực cuốn hút */
             background-image: 
                 radial-gradient(circle at 50% 10%, rgba(255, 60, 0, 0.18) 0%, transparent 55%),
                 radial-gradient(circle at 50% 80%, rgba(0, 150, 255, 0.14) 0%, transparent 60%),
                 radial-gradient(circle at 10% 40%, rgba(138, 43, 226, 0.08) 0%, transparent 40%),
                 radial-gradient(circle at 90% 60%, rgba(255, 0, 128, 0.07) 0%, transparent 40%);
             background-attachment: fixed;
+            
+            /* NGĂN CHẶN ZOOM KHI TAP NHANH HOẶC DI CHUYỂN */
+            touch-action: manipulation;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        /* Áp dụng touch-action cho các nút bấm và ô nhập liệu để chống phóng to ngoài ý muốn */
+        button, input, select, textarea, .feature-item {
+            touch-action: manipulation;
         }
 
         /* Thêm lớp hiệu ứng Scanline Cyberpunk cực mỏng dịu mắt */
@@ -172,18 +181,17 @@
     <!-- ================= SECTION 1: LOGIN SECTION ================= -->
     <div id="login-section" class="flex flex-col items-center justify-center w-full min-h-screen px-4 py-8 z-10">
         
-        <!-- LOGO ĐĂNG NHẬP (ĐÃ THAY ẢNH MỚI) -->
+        <!-- LOGO ĐĂNG NHẬP -->
         <div class="text-center mb-8">
             <div class="relative inline-block">
                 <div class="absolute inset-0 bg-ninja-orange rounded-full blur-2xl opacity-30 animate-pulse"></div>
-                <!-- Viền phát sáng rực rỡ hơn kết hợp ảnh mới yêu cầu -->
                 <img src="https://i.postimg.cc/QMMKR32G/IMG-1472.jpg" alt="Naruto Shippuden Logo" class="relative h-28 w-28 rounded-full border-4 border-ninja-orange shadow-[0_0_30px_rgba(255,119,0,0.5)] object-cover object-center">
             </div>
             <h1 class="text-2xl font-black font-orbitron tracking-widest mt-5 bg-gradient-to-r from-ninja-orange via-yellow-400 to-ninja-red bg-clip-text text-transparent">NARUTO SHIPPUDEN V2_0</h1>
             <p class="text-[10px] text-gray-400 font-bold font-orbitron tracking-widest mt-1">HOKAGE PANEL SYSTEM • PREMIUM V2_0</p>
         </div>
 
-        <!-- KHUNG PHÍM KHÓA (DỄ NHÌN, ĐẸP MẮT) -->
+        <!-- KHUNG PHÍM KHÓA -->
         <div class="bg-ninja-card border border-gray-800/80 w-full max-w-sm p-6 rounded-2xl relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-lg">
             
             <div class="text-center mb-6">
@@ -196,8 +204,9 @@
 
             <div class="space-y-4">
                 <div class="relative">
-                    <span class="absolute left-3.5 top-3.5 text-ninja-orange/60 text-sm"><i class="fas fa-key"></i></span>
-                    <input type="text" id="key-input" placeholder=">> NHẬP CHAKRA KEY KHÓA <<" class="w-full bg-ninja-input border border-gray-800 focus:border-ninja-orange/80 focus:outline-none text-ninja-orange font-bold font-orbitron placeholder-gray-600 py-3 pl-10 pr-4 rounded-xl text-center tracking-wider text-xs transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]">
+                    <span class="absolute left-3.5 top-3 text-ninja-orange/60 text-sm"><i class="fas fa-key"></i></span>
+                    <!-- Thay đổi text size thành text-base (16px) để ngăn chặn iOS auto-zoom khi focus -->
+                    <input type="text" id="key-input" placeholder=">> NHẬP CHAKRA KEY KHÓA <<" class="w-full bg-ninja-input border border-gray-800 focus:border-ninja-orange/80 focus:outline-none text-ninja-orange font-bold font-orbitron placeholder-gray-600 py-3 pl-10 pr-4 rounded-xl text-center tracking-wider text-base md:text-xs transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]">
                 </div>
 
                 <button id="activate-key-button" class="w-full glow-btn-orange bg-gradient-to-r from-ninja-orange via-red-500 to-ninja-red text-white py-3.5 rounded-xl text-xs font-bold font-orbitron tracking-widest transition-all active:scale-[0.98] flex items-center justify-center space-x-2 shadow-[0_4px_15px_rgba(255,119,0,0.25)]">
@@ -224,7 +233,7 @@
     <!-- ================= SECTION 2: CONSOLE PANEL CONTAINER ================= -->
     <div id="console-container" class="hidden w-full max-w-[420px] bg-ninja-dark/95 border-x border-gray-800/50 relative min-h-screen pb-[95px] z-10 shadow-[0_0_50px_rgba(0,0,0,0.9)]">
         
-        <!-- Header thiết kế đơn giản, thanh lịch, dễ nhìn (ĐÃ THAY ẢNH MỚI) -->
+        <!-- Header thiết kế đơn giản, thanh lịch -->
         <div class="text-center pt-6 pb-4 border-b border-gray-900 px-4 bg-gradient-to-b from-ninja-orange/10 via-transparent to-transparent">
             <div class="relative inline-block mb-3">
                 <img src="https://i.postimg.cc/QMMKR32G/IMG-1472.jpg" alt="Naruto Logo" class="relative h-16 w-16 rounded-full border-2 border-ninja-orange/60 p-0.5 object-cover">
@@ -270,13 +279,20 @@
                         </div>
                         <div>
                             <span class="text-gray-500 block text-[9px] font-bold">HẠN SỬ DỤNG:</span>
-                            <span id="key-expiry-info" class="font-bold text-ninja-red">N/A</span>
+                            <span id="key-expiry-info" class="font-bold text-ninja-red font-orbitron">N/A</span>
                         </div>
                     </div>
                     <div class="h-px bg-gray-800/30 my-1.5"></div>
-                    <div>
-                        <span class="text-gray-500 block text-[9px] font-bold">ID THIẾT BỊ (UID):</span>
-                        <span id="device-info" class="font-semibold text-ninja-cyan font-orbitron tracking-wider text-[9px]">N/A</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <span class="text-gray-500 block text-[9px] font-bold">ID THIẾT BỊ (UID):</span>
+                            <span id="device-info" class="font-semibold text-ninja-cyan font-orbitron tracking-wider text-[9px]">N/A</span>
+                        </div>
+                        <div>
+                            <!-- TÍCH HỢP HIỂN THỊ SỐ LƯỢNG THIẾT BỊ ĐÃ DÙNG -->
+                            <span class="text-gray-500 block text-[9px] font-bold">THIẾT BỊ ĐÃ DÙNG:</span>
+                            <span id="key-devices-count" class="font-bold text-ninja-green font-orbitron tracking-wider text-[11px]">N/A</span>
+                        </div>
                     </div>
                 </div>
 
@@ -403,10 +419,9 @@
                     <h2 class="text-[11px] font-bold font-orbitron tracking-widest text-ninja-red uppercase">OPTIMAL FUNCTION</h2>
                 </div>
 
-                <!-- Banner Game Free Fire sang xịn mịn hơn (Đstabilized) -->
+                <!-- Banner Game Free Fire sang xịn mịn hơn (CẬP NHẬT ẢNH LOGO ĐÍCH ĐẾN MỚI) -->
                 <div class="bg-gradient-to-r from-black/80 to-ninja-red/10 border border-gray-800/80 p-4 rounded-xl text-center relative overflow-hidden shadow-lg">
-                    <!-- Ảnh tròn Free Fire được thay thế bằng hình liên kết mới để giữ sự đồng nhất -->
-                    <img src="https://i.postimg.cc/QMMKR32G/IMG-1472.jpg" alt="Free Fire Logo" class="inline-block h-16 w-16 mb-2 rounded-full border-2 border-ninja-red/60 shadow-[0_0_15px_rgba(255,30,86,0.35)] object-cover">
+                    <img src="https://i.postimg.cc/NFW6bgBg/tai-xuong-(2).jpg" alt="Free Fire Logo" class="inline-block h-16 w-16 mb-2 rounded-full border-2 border-ninja-red/60 shadow-[0_0_15px_rgba(255,30,86,0.35)] object-cover">
                     <p class="text-[10px] text-gray-500 font-bold font-orbitron tracking-wider mb-3">ỨNG DỤNG ĐẾN: GARENA FREE FIRE</p>
 
                     <button id="optimize-game-button" class="w-full glow-btn-cyan bg-gradient-to-r from-ninja-cyan via-cyan-400 to-[#00a6ff] hover:opacity-95 text-ninja-dark py-3 rounded-xl text-xs font-bold font-orbitron tracking-widest shadow-[0_4px_15px_rgba(0,240,255,0.35)] transition-all flex items-center justify-center space-x-2">
@@ -553,6 +568,17 @@
 
     <!-- ================= JAVASCRIPT LOGIC ================= -->
     <script>
+        // --- CHỐNG PHÓNG TO KHI DÙNG CỬ CHỈ PINCH-TO-ZOOM HOẶC MULTI-TOUCH TRÊN DI ĐỘNG ---
+        document.addEventListener('gesturestart', function (e) {
+            e.preventDefault();
+        });
+        document.addEventListener('gesturechange', function (e) {
+            e.preventDefault();
+        });
+        document.addEventListener('gestureend', function (e) {
+            e.preventDefault();
+        });
+
         // --- GAME DEEP LINK ---
         const gameData = {
             freefire: {
@@ -775,6 +801,11 @@
             document.getElementById('active-key-display').textContent = key;
             document.getElementById('device-info').textContent = DEVICE_UID; 
             
+            // Cập nhật số thiết bị đã dùng trên giao diện
+            const usedDevices = keyData && keyData.devices ? Object.keys(keyData.devices).length : 1;
+            const limitDevices = keyData ? (keyData.max_devices || 1) : 1;
+            document.getElementById('key-devices-count').textContent = `${usedDevices}/${limitDevices}`;
+
             updateKeyExpiryInfo(keyData ? keyData.expiry : 9999999999999);
             updateDeviceStats(); 
             switchTab('config'); 
