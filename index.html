@@ -22,12 +22,16 @@
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 20px; }
         
+        /* Ép font chữ từ 16px trở lên chống tự động phóng màn hình trên iPhone */
         input, select, button {
             font-size: 16px !important;
         }
+        input[type="time"] {
+            color-scheme: dark;
+        }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen pb-24 antialiased">
+<body class="text-slate-100 min-h-screen pb-28 antialiased">
 
     <header class="sticky top-0 z-40 w-full glass-panel border-b border-slate-800/80 px-4 py-3.5 shadow-lg">
         <div class="max-w-md mx-auto flex items-center justify-between">
@@ -74,7 +78,8 @@
                 </div>
                 <div class="bg-slate-900/40 p-2 rounded-xl border border-slate-800/60">
                     <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Tăng ca</p>
-                    <p class="text-sm font-extrabold text-amber-400 mt-0.5" id="stat-ot">0đ</p>
+                    <p class="text-sm font-extrabold text-amber-400 mt-0.5" id="stat-ot">0 giờ</p>
+                    <p class="text-[9px] text-slate-500 mt-0.5" id="stat-ot-salary">+0đ</p>
                 </div>
                 <div class="bg-slate-900/40 p-2 rounded-xl border border-slate-800/60">
                     <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Nghỉ phép</p>
@@ -85,7 +90,7 @@
     </div>
 
     <main class="max-w-md mx-auto px-4 mt-5">
-        <div id="calendar-container" class="space-y-2.5 max-h-[58vh] overflow-y-auto pr-1 custom-scroll"></div>
+        <div id="calendar-container" class="space-y-2.5 max-h-[55vh] overflow-y-auto pr-1 custom-scroll"></div>
     </main>
 
     <div class="fixed bottom-6 left-0 right-0 z-50 px-4 flex justify-center">
@@ -95,22 +100,13 @@
     </div>
 
     <div id="attendance-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[99] flex items-end sm:items-center justify-center p-0 sm:p-4 hidden" style="-webkit-tap-highlight-color: transparent;">
-        <div class="bg-slate-800/95 w-full max-w-md rounded-t-3xl sm:rounded-2xl border-t sm:border border-slate-700/60 p-6 space-y-5 shadow-2xl">
+        <div class="bg-slate-800/95 w-full max-w-md rounded-t-3xl sm:rounded-2xl border-t sm:border border-slate-700/60 p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto custom-scroll">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-2.5">
                     <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Chi Tiết Ngày</h3>
                     <p id="modal-date-str" class="text-base font-extrabold text-amber-400">--/--/----</p>
                 </div>
                 <button onclick="closeModal()" class="bg-slate-900/60 text-slate-400 p-2 rounded-full border border-slate-700/40 w-10 h-10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-
-            <div class="bg-slate-900/40 p-3.5 rounded-xl border border-slate-700/40">
-                <div class="flex justify-between items-center mb-2">
-                    <label class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Số giờ ca chính</label>
-                    <span class="text-xs font-bold text-amber-400" id="shift-hours-display">6 giờ</span>
-                </div>
-                <input type="range" id="shift-hours" min="0" max="16" step="0.5" value="6" oninput="document.getElementById('shift-hours-display').innerText = this.value + ' giờ'"
-                    class="w-full accent-amber-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
             </div>
 
             <div class="space-y-2">
@@ -122,16 +118,54 @@
                 </div>
             </div>
 
+            <div id="main-shift-container" class="space-y-3 bg-slate-900/40 p-3.5 rounded-xl border border-slate-700/40">
+                <div class="flex justify-between items-center">
+                    <label class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Số giờ ca chính</label>
+                    <span class="text-xs font-bold text-amber-400" id="shift-hours-display">8 giờ</span>
+                </div>
+                <input type="range" id="shift-hours" min="0" max="16" step="0.5" value="8" oninput="document.getElementById('shift-hours-display').innerText = this.value + ' giờ'"
+                    class="w-full accent-amber-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                
+                <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Giờ vào ca</label>
+                        <input type="time" id="main-start-time" value="08:00" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-slate-200 font-medium focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Giờ về ca</label>
+                        <input type="time" id="main-end-time" value="17:00" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-slate-200 font-medium focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/40 space-y-3">
                 <div class="flex items-center justify-between">
                     <label for="ot-toggle" class="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider cursor-pointer">Có làm thêm ca (OT)</label>
                     <input type="checkbox" id="ot-toggle" onchange="toggleOTField()" class="w-5 h-5 text-amber-500 bg-slate-800 border-slate-600 rounded accent-amber-500">
                 </div>
-                <div id="ot-input-container" class="hidden">
-                    <div class="relative mt-1">
-                        <input type="number" id="ot-amount-input" min="0" step="1000" placeholder="Nhập thẳng số tiền tăng ca (VD: 150000)" 
-                               class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2.5 pl-4 pr-12 text-base font-bold text-amber-400 focus:outline-none focus:border-amber-500">
-                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">đ</span>
+                
+                <div id="ot-input-container" class="hidden space-y-3 pt-2 border-t border-slate-800">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Số giờ tăng ca</label>
+                        <input type="number" id="ot-hours" min="0" max="24" step="0.5" placeholder="Ví dụ: 3.5" 
+                               class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-4 text-sm font-bold text-slate-200 focus:outline-none focus:border-amber-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-amber-400 uppercase mb-1">Số tiền tăng ca kiếm được (đ)</label>
+                        <input type="number" id="ot-amount-input" min="0" placeholder="Ví dụ: 150000" 
+                               class="w-full bg-slate-800 border border-amber-500/40 rounded-xl py-2.5 px-4 text-base font-black text-amber-400 focus:outline-none focus:border-amber-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Giờ vào tăng ca</label>
+                            <input type="time" id="ot-start-time" value="18:00" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-slate-200 font-medium focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Giờ về tăng ca</label>
+                            <input type="time" id="ot-end-time" value="21:00" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-slate-200 font-medium focus:outline-none focus:border-amber-500">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -157,7 +191,7 @@
 
         function initDB() {
             return new Promise((resolve) => {
-                let request = indexedDB.open("CyberCoreDB", 1);
+                let request = indexedDB.open("CyberCoreDB", 3); // Cập nhật cấu trúc DB lưu trữ số tiền tự nhập
                 
                 request.onupgradeneeded = function(e) {
                     let dbRes = e.target.result;
@@ -224,21 +258,28 @@
                 const dateObj = new Date(currentYear, currentMonth, d);
                 const dayOfWeek = weekdays[dateObj.getDay()];
                 const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                
-                // ĐÃ SỬA: Mặc định shiftHours ban đầu là 6 giờ thay vì 8 giờ
-                const record = attendanceData[dateKey] || { status: 'none', shiftHours: 6, otAmount: 0 };
+                const record = attendanceData[dateKey] || { status: 'none', shiftHours: 8, ot: 0, otAmount: 0, mainStart: '08:00', mainEnd: '17:00', otStart: '18:00', otEnd: '21:00' };
                 
                 let statusMarkup = `<span class="text-[10px] text-slate-500 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800 font-bold uppercase tracking-wider">Chưa chấm</span>`;
                 let dayBg = "bg-slate-800/20 border-slate-800/60"; let earningsText = "";
+                let timeLogsMarkup = ""; 
 
                 if (record.status === 'work') {
-                    const mainHoursEarn = parseFloat(record.shiftHours !== undefined ? record.shiftHours : 6) * hourlyRate;
+                    const mainHoursEarn = parseFloat(record.shiftHours || 8) * hourlyRate;
+                    // Lấy số tiền tăng ca do bạn tự gõ vào, nếu không có thì mặc định bằng 0
                     const otEarn = parseFloat(record.otAmount || 0);
                     const dayEarning = mainHoursEarn + otEarn;
 
                     statusMarkup = `<span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20 font-bold uppercase tracking-wider">Đi làm</span>`;
                     dayBg = "bg-emerald-950/15 border-emerald-900/30";
                     earningsText = `<p class="text-xs font-black text-emerald-400 text-right">+${dayEarning.toLocaleString('vi-VN')}đ</p>`;
+                    
+                    let mainTimeStr = (record.mainStart && record.mainEnd) ? `${record.mainStart}-${record.mainEnd}` : "08:00-17:00";
+                    timeLogsMarkup = `<span class="text-[9px] text-slate-400 bg-slate-900/80 px-1.5 py-0.5 rounded border border-slate-800"><i class="fa-regular fa-clock mr-1 text-[8px] text-slate-500"></i>${mainTimeStr}</span>`;
+                    
+                    if (record.ot > 0 && record.otStart && record.otEnd) {
+                        timeLogsMarkup += `<span class="text-[9px] text-amber-400 bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-900/30 ml-1.5"><i class="fa-regular fa-clock mr-1 text-[8px] text-amber-500"></i>OT: ${record.otStart}-${record.otEnd}</span>`;
+                    }
                 } else if (record.status === 'leave_allowed') {
                     statusMarkup = `<span class="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 font-bold uppercase tracking-wider">Có Phép</span>`;
                     dayBg = "bg-slate-800/30 border-slate-700/40"; earningsText = `<p class="text-xs font-bold text-slate-500 text-right">Nghỉ phép</p>`;
@@ -247,74 +288,85 @@
                     dayBg = "bg-rose-950/15 border-rose-900/30"; earningsText = `<p class="text-xs font-bold text-rose-500 text-right">0đ</p>`;
                 }
 
-                let badgesMarkup = `<span class="text-[9px] bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 font-semibold">${record.shiftHours !== undefined ? record.shiftHours : 6}h chính</span>`;
+                let badgesMarkup = `<span class="text-[9px] bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 font-semibold">${record.shiftHours || 8}h chính</span>`;
                 
-                // ĐÃ SỬA: Hiển thị trực tiếp cục tiền tăng ca do bạn tự điền vào badge
-                if (record.otAmount > 0) {
-                    badgesMarkup += `<span class="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30 font-extrabold ml-1.5">Tăng ca +${parseInt(record.otAmount).toLocaleString('vi-VN')}đ</span>`;
+                // GIỮ NGUYÊN HIỂN THỊ: Hiện rõ số tiền tăng ca tự chọn
+                if (record.ot > 0) {
+                    const actualOtMoney = parseFloat(record.otAmount || 0);
+                    badgesMarkup += `<span class="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30 font-extrabold ml-1.5">Tăng ca +${actualOtMoney.toLocaleString('vi-VN')}đ (+${record.ot}h)</span>`;
                 }
 
                 const isToday = (d === currentDateNum);
                 const cardRow = document.createElement('div');
-                cardRow.className = `glass-panel flex items-center justify-between p-3 rounded-xl border ${dayBg} ${isToday ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-800'} hover:border-slate-600 transition-all cursor-pointer`;
+                cardRow.className = `glass-panel flex flex-col justify-between p-3 rounded-xl border ${dayBg} ${isToday ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-800'} hover:border-slate-600 transition-all cursor-pointer gap-2`;
                 cardRow.setAttribute('onclick', `openModal('${dateKey}', ${d})`);
                 cardRow.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="text-center min-w-[42px] bg-slate-950 p-2 rounded-xl border border-slate-800/80">
-                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">${dayOfWeek === "Chủ Nhật" ? "CN" : dayOfWeek.replace("Thứ ", "T")}</p>
-                            <p class="text-base font-black ${dayOfWeek === "Chủ Nhật" ? "text-rose-400" : "text-slate-100"}">${d}</p>
+                    <div class="flex items-center justify-between w-full">
+                        <div class="flex items-center gap-3">
+                            <div class="text-center min-w-[42px] bg-slate-950 p-2 rounded-xl border border-slate-800/80">
+                                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">${dayOfWeek === "Chủ Nhật" ? "CN" : dayOfWeek.replace("Thứ ", "T")}</p>
+                                <p class="text-base font-black ${dayOfWeek === "Chủ Nhật" ? "text-rose-400" : "text-slate-100"}">${d}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-extrabold ${isToday ? 'text-amber-400' : 'text-slate-200'}">${isToday ? 'Hôm nay' : 'Ngày ' + d}</p>
+                                <div class="flex items-center gap-1 mt-1">${record.status === 'work' ? badgesMarkup : '<p class="text-[10px] text-slate-500">Bấm để nhập công</p>'}</div>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-xs font-extrabold ${isToday ? 'text-amber-400' : 'text-slate-200'}">${isToday ? 'Hôm nay' : 'Ngày ' + d}</p>
-                            <div class="flex items-center gap-1 mt-1">${record.status === 'work' ? badgesMarkup : '<p class="text-[10px] text-slate-500">Bấm để nhập công</p>'}</div>
-                        </div>
+                        <div class="space-y-1">${earningsText}<div class="text-right">${statusMarkup}</div></div>
                     </div>
-                    <div class="space-y-1">${earningsText}<div class="text-right">${statusMarkup}</div></div>`;
+                    ${record.status === 'work' && timeLogsMarkup ? `<div class="flex items-center gap-1.5 border-t border-slate-800/40 pt-1.5">${timeLogsMarkup}</div>` : ''}
+                `;
                 container.appendChild(cardRow);
             }
         }
 
         function updateStats() {
-            let totalWorkDays = 0, totalLeaveAllowed = 0, totalLeaveUnallowed = 0, totalMainHours = 0, totalEarnings = 0, totalOTEarnings = 0;
+            let totalWorkDays = 0, totalLeaveAllowed = 0, totalLeaveUnallowed = 0, totalMainHours = 0, totalOTHours = 0, totalEarnings = 0, totalOTEarnings = 0;
             Object.values(attendanceData).forEach(record => {
                 if (record.status === 'work') {
                     totalWorkDays++;
-                    const mainH = parseFloat(record.shiftHours !== undefined ? record.shiftHours : 6); 
-                    const otAmount = parseFloat(record.otAmount || 0);
+                    const mainH = parseFloat(record.shiftHours || 8); const otH = parseFloat(record.ot || 0);
+                    totalMainHours += mainH; totalOTHours += otH;
                     
-                    totalMainHours += mainH; 
-                    totalOTEarnings += otAmount; 
-                    totalEarnings += ((mainH * hourlyRate) + otAmount);
+                    const dayOTSalary = parseFloat(record.otAmount || 0);
+                    totalOTEarnings += dayOTSalary; totalEarnings += ((mainH * hourlyRate) + dayOTSalary);
                 }
-                if (record.status === 'leave_allowed') totalLeaveAllowed++; 
-                if (record.status === 'leave_unallowed') totalLeaveUnallowed++;
+                if (record.status === 'leave_allowed') totalLeaveAllowed++; if (record.status === 'leave_unallowed') totalLeaveUnallowed++;
             });
 
             document.getElementById('stat-total-salary').innerText = totalEarnings.toLocaleString('vi-VN');
             document.getElementById('stat-work').innerText = `${totalWorkDays} ngày`;
             document.getElementById('stat-work-hours').innerText = `${totalMainHours}h chính`;
-            // Cập nhật ô tổng tiền tăng ca trên Dashboard
-            document.getElementById('stat-ot').innerText = `${totalOTEarnings.toLocaleString('vi-VN')}đ`;
+            document.getElementById('stat-ot').innerText = `${totalOTHours} giờ`;
+            document.getElementById('stat-ot-salary').innerText = `+${totalOTEarnings.toLocaleString('vi-VN')}đ`;
         }
 
         function openTodayModal() { openModal(`${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentDateNum).padStart(2, '0')}`, currentDateNum); }
         
         function openModal(dateKey, dayNum) {
             selectedDayKey = dateKey; document.getElementById('modal-date-str').innerText = `${String(dayNum).padStart(2, '0')} Th${currentMonth + 1}, ${currentYear}`;
+            const r = attendanceData[dateKey] || { status: 'none', shiftHours: 8, ot: 0, otAmount: '', mainStart: '08:00', mainEnd: '17:00', otStart: '18:00', otEnd: '21:00' };
             
-            // ĐÃ SỬA: Mặc định giá trị khởi tạo mới của shiftHours là 6 giờ
-            const r = attendanceData[dateKey] || { status: 'none', shiftHours: 6, otAmount: 0 };
+            document.getElementById('shift-hours').value = r.shiftHours || 8;
+            document.getElementById('shift-hours-display').innerText = (r.shiftHours || 8) + " giờ";
             
-            document.getElementById('shift-hours').value = r.shiftHours !== undefined ? r.shiftHours : 6;
-            document.getElementById('shift-hours-display').innerText = (r.shiftHours !== undefined ? r.shiftHours : 6) + " giờ";
+            document.getElementById('main-start-time').value = r.mainStart || '08:00';
+            document.getElementById('main-end-time').value = r.mainEnd || '17:00';
+            
             selectStatus(r.status);
             
-            if (r.otAmount > 0) {
+            if (r.ot > 0 || r.otAmount > 0) {
                 document.getElementById('ot-toggle').checked = true; document.getElementById('ot-input-container').classList.remove('hidden');
-                document.getElementById('ot-amount-input').value = r.otAmount;
+                document.getElementById('ot-hours').value = r.ot || '';
+                document.getElementById('ot-amount-input').value = r.otAmount || '';
+                document.getElementById('ot-start-time').value = r.otStart || '18:00';
+                document.getElementById('ot-end-time').value = r.otEnd || '21:00';
             } else {
                 document.getElementById('ot-toggle').checked = false; document.getElementById('ot-input-container').classList.add('hidden');
+                document.getElementById('ot-hours').value = '';
                 document.getElementById('ot-amount-input').value = '';
+                document.getElementById('ot-start-time').value = '18:00';
+                document.getElementById('ot-end-time').value = '21:00';
             }
             document.getElementById('attendance-modal').classList.remove('hidden');
         }
@@ -322,7 +374,7 @@
         function closeModal() { document.getElementById('attendance-modal').classList.add('hidden'); }
         function toggleOTField() {
             const isChecked = document.getElementById('ot-toggle').checked;
-            document.getElementById('ot-input-container').className = isChecked ? "block space-y-2" : "hidden";
+            document.getElementById('ot-input-container').className = isChecked ? "block space-y-3" : "hidden";
         }
 
         function selectStatus(status) {
@@ -335,21 +387,45 @@
                     btn.className = "py-3 rounded-xl border text-xs font-bold bg-slate-900 border-slate-700/60 text-slate-400 text-center transition-all";
                 }
             });
+
+            const mainShiftBox = document.getElementById('main-shift-container');
+            if (status === 'work') {
+                mainShiftBox.classList.remove('hidden');
+            } else {
+                mainShiftBox.classList.add('hidden');
+            }
         }
 
         function saveAttendance() {
             if (!selectedDayKey) return;
+            let otH = 0;
             let otMoney = 0;
+            let otS = '18:00';
+            let otE = '21:00';
+
             if (document.getElementById('ot-toggle').checked) {
-                const val = parseFloat(document.getElementById('ot-amount-input').value); otMoney = isNaN(val) || val < 0 ? 0 : val;
+                const valHours = parseFloat(document.getElementById('ot-hours').value); 
+                otH = isNaN(valHours) || valHours < 0 ? 0 : valHours;
+
+                const valAmount = parseFloat(document.getElementById('ot-amount-input').value); 
+                otMoney = isNaN(valAmount) || valAmount < 0 ? 0 : valAmount;
+
+                otS = document.getElementById('ot-start-time').value;
+                otE = document.getElementById('ot-end-time').value;
             }
             
             let targetData = {
                 status: selectedStatusStr || 'none',
-                shiftHours: parseFloat(document.getElementById('shift-hours').value),
-                otAmount: otMoney
+                shiftHours: parseFloat(document.getElementById('shift-hours').value) || 8,
+                mainStart: document.getElementById('main-start-time').value || '08:00',
+                mainEnd: document.getElementById('main-end-time').value || '17:00',
+                ot: otH, 
+                otAmount: otMoney, // Lưu trữ số tiền tăng ca tự điền
+                otStart: otS,
+                otEnd: otE
             };
 
+            // Ghi dữ liệu bền vững trực tiếp vào IndexedDB hệ thống
             let tx = db.transaction("attendance", "readwrite");
             tx.objectStore("attendance").put(targetData, selectedDayKey);
 
