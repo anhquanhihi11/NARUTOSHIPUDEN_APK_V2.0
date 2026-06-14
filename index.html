@@ -22,7 +22,6 @@
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 20px; }
         
-        /* Ép font chữ ô nhập liệu từ 16px trở lên để trình duyệt không tự động phóng màn hình */
         input, select, button {
             font-size: 16px !important;
         }
@@ -75,8 +74,7 @@
                 </div>
                 <div class="bg-slate-900/40 p-2 rounded-xl border border-slate-800/60">
                     <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Tăng ca</p>
-                    <p class="text-sm font-extrabold text-amber-400 mt-0.5" id="stat-ot">0 giờ</p>
-                    <p class="text-[9px] text-slate-500 mt-0.5" id="stat-ot-salary">+0đ</p>
+                    <p class="text-sm font-extrabold text-amber-400 mt-0.5" id="stat-ot">0đ</p>
                 </div>
                 <div class="bg-slate-900/40 p-2 rounded-xl border border-slate-800/60">
                     <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Nghỉ phép</p>
@@ -109,9 +107,9 @@
             <div class="bg-slate-900/40 p-3.5 rounded-xl border border-slate-700/40">
                 <div class="flex justify-between items-center mb-2">
                     <label class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Số giờ ca chính</label>
-                    <span class="text-xs font-bold text-amber-400" id="shift-hours-display">8 giờ</span>
+                    <span class="text-xs font-bold text-amber-400" id="shift-hours-display">6 giờ</span>
                 </div>
-                <input type="range" id="shift-hours" min="0" max="16" step="0.5" value="8" oninput="document.getElementById('shift-hours-display').innerText = this.value + ' giờ'"
+                <input type="range" id="shift-hours" min="0" max="16" step="0.5" value="6" oninput="document.getElementById('shift-hours-display').innerText = this.value + ' giờ'"
                     class="w-full accent-amber-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
             </div>
 
@@ -130,23 +128,11 @@
                     <input type="checkbox" id="ot-toggle" onchange="toggleOTField()" class="w-5 h-5 text-amber-500 bg-slate-800 border-slate-600 rounded accent-amber-500">
                 </div>
                 <div id="ot-input-container" class="hidden">
-                    <input type="number" id="ot-hours" min="0" max="24" step="0.5" placeholder="Nhập số giờ tăng ca" 
-                           class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2.5 px-4 text-base font-bold text-amber-400 focus:outline-none focus:border-amber-500">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 bg-slate-900/30 p-3 rounded-xl border border-slate-800">
-                <div>
-                    <label class="block text-[9px] uppercase font-bold text-slate-400">Hệ số ca chính</label>
-                    <p class="text-xs font-bold text-slate-300 mt-0.5">x 1.0</p>
-                </div>
-                <div>
-                    <label class="block text-[9px] uppercase font-bold text-slate-400">Hệ số tăng ca</label>
-                    <select id="ot-multiplier" class="bg-slate-900 border border-slate-700 text-sm text-amber-400 font-bold rounded-lg p-1 mt-0.5 focus:outline-none w-full">
-                        <option value="1.0">x 1.0</option>
-                        <option value="1.5" selected>x 1.5</option>
-                        <option value="2.0">x 2.0</option>
-                    </select>
+                    <div class="relative mt-1">
+                        <input type="number" id="ot-amount-input" min="0" step="1000" placeholder="Nhập thẳng số tiền tăng ca (VD: 150000)" 
+                               class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2.5 pl-4 pr-12 text-base font-bold text-amber-400 focus:outline-none focus:border-amber-500">
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">đ</span>
+                    </div>
                 </div>
             </div>
 
@@ -238,14 +224,16 @@
                 const dateObj = new Date(currentYear, currentMonth, d);
                 const dayOfWeek = weekdays[dateObj.getDay()];
                 const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const record = attendanceData[dateKey] || { status: 'none', shiftHours: 8, ot: 0, otMult: 1.5 };
+                
+                // ĐÃ SỬA: Mặc định shiftHours ban đầu là 6 giờ thay vì 8 giờ
+                const record = attendanceData[dateKey] || { status: 'none', shiftHours: 6, otAmount: 0 };
                 
                 let statusMarkup = `<span class="text-[10px] text-slate-500 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800 font-bold uppercase tracking-wider">Chưa chấm</span>`;
                 let dayBg = "bg-slate-800/20 border-slate-800/60"; let earningsText = "";
 
                 if (record.status === 'work') {
-                    const mainHoursEarn = parseFloat(record.shiftHours || 8) * hourlyRate;
-                    const otEarn = parseFloat(record.ot || 0) * hourlyRate * parseFloat(record.otMult || 1.5);
+                    const mainHoursEarn = parseFloat(record.shiftHours !== undefined ? record.shiftHours : 6) * hourlyRate;
+                    const otEarn = parseFloat(record.otAmount || 0);
                     const dayEarning = mainHoursEarn + otEarn;
 
                     statusMarkup = `<span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20 font-bold uppercase tracking-wider">Đi làm</span>`;
@@ -259,12 +247,11 @@
                     dayBg = "bg-rose-950/15 border-rose-900/30"; earningsText = `<p class="text-xs font-bold text-rose-500 text-right">0đ</p>`;
                 }
 
-                let badgesMarkup = `<span class="text-[9px] bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 font-semibold">${record.shiftHours || 8}h chính</span>`;
+                let badgesMarkup = `<span class="text-[9px] bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 font-semibold">${record.shiftHours !== undefined ? record.shiftHours : 6}h chính</span>`;
                 
-                // ĐÃ SỬA: Tính rõ số tiền tăng ca thực tế thay vì chỉ hiện hệ số x1.5 hoặc x2.0
-                if (record.ot > 0) {
-                    const actualOtMoney = parseFloat(record.ot) * hourlyRate * parseFloat(record.otMult || 1.5);
-                    badgesMarkup += `<span class="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30 font-extrabold ml-1.5">Tăng ca +${actualOtMoney.toLocaleString('vi-VN')}đ (+${record.ot}h)</span>`;
+                // ĐÃ SỬA: Hiển thị trực tiếp cục tiền tăng ca do bạn tự điền vào badge
+                if (record.otAmount > 0) {
+                    badgesMarkup += `<span class="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30 font-extrabold ml-1.5">Tăng ca +${parseInt(record.otAmount).toLocaleString('vi-VN')}đ</span>`;
                 }
 
                 const isToday = (d === currentDateNum);
@@ -288,42 +275,47 @@
         }
 
         function updateStats() {
-            let totalWorkDays = 0, totalLeaveAllowed = 0, totalLeaveUnallowed = 0, totalMainHours = 0, totalOTHours = 0, totalEarnings = 0, totalOTEarnings = 0;
+            let totalWorkDays = 0, totalLeaveAllowed = 0, totalLeaveUnallowed = 0, totalMainHours = 0, totalEarnings = 0, totalOTEarnings = 0;
             Object.values(attendanceData).forEach(record => {
                 if (record.status === 'work') {
                     totalWorkDays++;
-                    const mainH = parseFloat(record.shiftHours || 8); const otH = parseFloat(record.ot || 0); const multiplier = parseFloat(record.otMult || 1.5);
-                    totalMainHours += mainH; totalOTHours += otH;
-                    const dayOTSalary = otH * hourlyRate * multiplier;
-                    totalOTEarnings += dayOTSalary; totalEarnings += ((mainH * hourlyRate) + dayOTSalary);
+                    const mainH = parseFloat(record.shiftHours !== undefined ? record.shiftHours : 6); 
+                    const otAmount = parseFloat(record.otAmount || 0);
+                    
+                    totalMainHours += mainH; 
+                    totalOTEarnings += otAmount; 
+                    totalEarnings += ((mainH * hourlyRate) + otAmount);
                 }
-                if (record.status === 'leave_allowed') totalLeaveAllowed++; if (record.status === 'leave_unallowed') totalLeaveUnallowed++;
+                if (record.status === 'leave_allowed') totalLeaveAllowed++; 
+                if (record.status === 'leave_unallowed') totalLeaveUnallowed++;
             });
 
             document.getElementById('stat-total-salary').innerText = totalEarnings.toLocaleString('vi-VN');
             document.getElementById('stat-work').innerText = `${totalWorkDays} ngày`;
             document.getElementById('stat-work-hours').innerText = `${totalMainHours}h chính`;
-            document.getElementById('stat-ot').innerText = `${totalOTHours} giờ`;
-            document.getElementById('stat-ot-salary').innerText = `+${totalOTEarnings.toLocaleString('vi-VN')}đ`;
+            // Cập nhật ô tổng tiền tăng ca trên Dashboard
+            document.getElementById('stat-ot').innerText = `${totalOTEarnings.toLocaleString('vi-VN')}đ`;
         }
 
         function openTodayModal() { openModal(`${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentDateNum).padStart(2, '0')}`, currentDateNum); }
         
         function openModal(dateKey, dayNum) {
             selectedDayKey = dateKey; document.getElementById('modal-date-str').innerText = `${String(dayNum).padStart(2, '0')} Th${currentMonth + 1}, ${currentYear}`;
-            const r = attendanceData[dateKey] || { status: 'none', shiftHours: 8, ot: 0, otMult: 1.5 };
-            document.getElementById('shift-hours').value = r.shiftHours || 8;
-            document.getElementById('shift-hours-display').innerText = (r.shiftHours || 8) + " giờ";
+            
+            // ĐÃ SỬA: Mặc định giá trị khởi tạo mới của shiftHours là 6 giờ
+            const r = attendanceData[dateKey] || { status: 'none', shiftHours: 6, otAmount: 0 };
+            
+            document.getElementById('shift-hours').value = r.shiftHours !== undefined ? r.shiftHours : 6;
+            document.getElementById('shift-hours-display').innerText = (r.shiftHours !== undefined ? r.shiftHours : 6) + " giờ";
             selectStatus(r.status);
             
-            if (r.ot > 0) {
+            if (r.otAmount > 0) {
                 document.getElementById('ot-toggle').checked = true; document.getElementById('ot-input-container').classList.remove('hidden');
-                document.getElementById('ot-hours').value = r.ot;
+                document.getElementById('ot-amount-input').value = r.otAmount;
             } else {
                 document.getElementById('ot-toggle').checked = false; document.getElementById('ot-input-container').classList.add('hidden');
-                document.getElementById('ot-hours').value = '';
+                document.getElementById('ot-amount-input').value = '';
             }
-            document.getElementById('ot-multiplier').value = r.otMult || "1.5";
             document.getElementById('attendance-modal').classList.remove('hidden');
         }
 
@@ -347,18 +339,17 @@
 
         function saveAttendance() {
             if (!selectedDayKey) return;
-            let otH = 0;
+            let otMoney = 0;
             if (document.getElementById('ot-toggle').checked) {
-                const val = parseFloat(document.getElementById('ot-hours').value); otH = isNaN(val) || val < 0 ? 0 : val;
+                const val = parseFloat(document.getElementById('ot-amount-input').value); otMoney = isNaN(val) || val < 0 ? 0 : val;
             }
             
             let targetData = {
                 status: selectedStatusStr || 'none',
-                shiftHours: parseFloat(document.getElementById('shift-hours').value) || 8,
-                ot: otH, otMult: parseFloat(document.getElementById('ot-multiplier').value) || 1.5
+                shiftHours: parseFloat(document.getElementById('shift-hours').value),
+                otAmount: otMoney
             };
 
-            // Ghi dữ liệu bền vững trực tiếp vào IndexedDB hệ thống
             let tx = db.transaction("attendance", "readwrite");
             tx.objectStore("attendance").put(targetData, selectedDayKey);
 
