@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CyberCore Premium - Quản Lý Chấm Công & Lương</title>
+    <title>CyberCore Premium - Quản Lý Chấm Công</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -22,11 +20,10 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 20px; }
         
-        /* ĐÃ SỬA: Ép font-size tối thiểu 16px cho tất cả input để triệt để lỗi tự phóng màn hình */
-        input, select {
+        /* Đã sửa: Ép font chữ ô nhập liệu từ 16px trở lên để trình duyệt không tự động zoom */
+        input, select, button {
             font-size: 16px !important;
         }
     </style>
@@ -89,18 +86,8 @@
         </div>
     </div>
 
-    <div id="alert-attendance" class="max-w-md mx-auto px-4 mt-4 hidden">
-        <div class="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 text-amber-300 p-3.5 rounded-2xl flex items-center gap-3 shadow-lg animate-pulse">
-            <i class="fa-solid fa-triangle-exclamation text-amber-400 text-lg"></i>
-            <div class="text-xs flex-1">
-                <span class="font-bold block text-amber-400">Chưa chấm công hôm nay!</span>
-                Hệ thống sẽ gửi thông báo nhắc nhở vào lúc 23:00 tối nếu bạn quên.
-            </div>
-        </div>
-    </div>
-
     <main class="max-w-md mx-auto px-4 mt-5">
-        <div id="calendar-container" class="space-y-2.5 max-h-[52vh] overflow-y-auto pr-1 custom-scroll"></div>
+        <div id="calendar-container" class="space-y-2.5 max-h-[58vh] overflow-y-auto pr-1 custom-scroll"></div>
     </main>
 
     <div class="fixed bottom-6 left-0 right-0 z-40 px-4 flex justify-center pointer-events-none">
@@ -111,7 +98,6 @@
 
     <div id="attendance-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
         <div class="bg-slate-800/95 w-full max-w-md rounded-t-3xl sm:rounded-2xl border-t sm:border border-slate-700/60 p-6 space-y-5">
-            
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-2.5">
                     <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Chi Tiết Ngày</h3>
@@ -176,12 +162,61 @@
 
         document.getElementById('current-month-txt').innerText = `Tháng ${String(currentMonth + 1).padStart(2, '0')}/${currentYear}`;
 
-        let attendanceData = JSON.parse(localStorage.getItem('cybercore_pro_attendance')) || {};
-        let hourlyRate = parseInt(localStorage.getItem('cybercore_hourly_rate')) || 25000;
-        document.getElementById('hourly-rate-input').value = hourlyRate;
+        let attendanceData = {};
+        let hourlyRate = 25000;
+        let db;
 
         let selectedDayKey = null; let selectedStatusStr = null;
         const weekdays = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+
+        // Khởi tạo hệ thống lưu trữ IndexedDB bền vững
+        function initDB() {
+            return new Promise((resolve) => {
+                let request = indexedDB.open("CyberCoreDB", 1);
+                
+                request.onupgradeneeded = function(e) {
+                    let dbRes = e.target.result;
+                    if (!dbRes.objectStoreNames.contains("settings")) {
+                        dbRes.createObjectStore("settings");
+                    }
+                    if (!dbRes.objectStoreNames.contains("attendance")) {
+                        dbRes.createObjectStore("attendance");
+                    }
+                };
+
+                request.onsuccess = function(e) {
+                    db = e.target.result;
+                    resolve();
+                };
+            });
+        }
+
+        function loadDataFromDB() {
+            return new Promise((resolve) => {
+                let tx = db.transaction(["settings", "attendance"], "readonly");
+                let settingsStore = tx.objectStore("settings");
+                let attendanceStore = tx.objectStore("attendance");
+
+                let reqRate = settingsStore.get("hourlyRate");
+                reqRate.onsuccess = function() {
+                    if (reqRate.result) {
+                        hourlyRate = reqRate.result;
+                        document.getElementById('hourly-rate-input').value = hourlyRate;
+                    }
+                };
+
+                attendanceData = {};
+                attendanceStore.openCursor().onsuccess = function(e) {
+                    let cursor = e.target.result;
+                    if (cursor) {
+                        attendanceData[cursor.key] = cursor.value;
+                        cursor.continue();
+                    } else {
+                        resolve();
+                    }
+                };
+            });
+        }
 
         function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
 
@@ -189,49 +224,10 @@
             const val = parseInt(document.getElementById('hourly-rate-input').value);
             if (!isNaN(val) && val >= 0) {
                 hourlyRate = val;
-                localStorage.setItem('cybercore_hourly_rate', hourlyRate);
+                let tx = db.transaction("settings", "readwrite");
+                tx.objectStore("settings").put(hourlyRate, "hourlyRate");
                 renderCalendar(); updateStats();
             }
-        }
-
-        // ĐÃ THÊM: Tính năng đăng ký báo thức thông báo tự động lúc 23h hàng ngày
-        function schedule23hNotification() {
-            if (!("Notification" in window)) return;
-
-            // Xin quyền nếu chưa có
-            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-                Notification.requestPermission();
-            }
-
-            // Thiết lập mốc 23 giờ tối hôm nay
-            let targetTime = new Date();
-            targetTime.setHours(23, 0, 0, 0);
-
-            // Nếu bây giờ đã muộn hơn 23h, dời lịch nhắc sang 23h ngày mai
-            if (new Date().getTime() > targetTime.getTime()) {
-                targetTime.setDate(targetTime.getDate() + 1);
-            }
-
-            const delay = targetTime.getTime() - new Date().getTime();
-
-            // Xóa bộ hẹn giờ cũ nếu có tránh trùng lặp
-            if (window.attendanceCron) clearTimeout(window.attendanceCron);
-
-            // Kích hoạt đồng hồ đếm ngược ngầm
-            window.attendanceCron = setTimeout(() => {
-                const todayKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentDateNum).padStart(2, '0')}`;
-                // Kiểm tra xem hôm nay đã chấm chưa, nếu chưa thì bắn thông báo ra màn hình khóa
-                if (!attendanceData[todayKey] || attendanceData[todayKey].status === 'none') {
-                    if (Notification.permission === "granted") {
-                        new Notification("CyberCore Nhắc Nhở 🚨", {
-                            body: "Đã 23h rồi! Bạn chưa chấm công hôm nay, hãy bấm vào đây để cập nhật ngay nhé.",
-                            icon: "https://cdn-icons-png.flaticon.com/512/3652/3652191.png"
-                        });
-                    }
-                }
-                // Tự động lặp lại đăng ký lịch cho ngày tiếp theo
-                schedule23hNotification();
-            }, delay);
         }
 
         function renderCalendar() {
@@ -302,9 +298,6 @@
             document.getElementById('stat-work-hours').innerText = `${totalMainHours}h chính`;
             document.getElementById('stat-ot').innerText = `${totalOTHours} giờ`;
             document.getElementById('stat-ot-salary').innerText = `+${totalOTEarnings.toLocaleString('vi-VN')}đ`;
-
-            const todayKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentDateNum).padStart(2, '0')}`;
-            document.getElementById('alert-attendance').className = (!attendanceData[todayKey] || attendanceData[todayKey].status === 'none') ? "max-w-md mx-auto px-4 mt-4 block" : "max-w-md mx-auto px-4 mt-4 hidden";
         }
 
         function openTodayModal() { openModal(`${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentDateNum).padStart(2, '0')}`, currentDateNum); }
@@ -351,27 +344,29 @@
             if (document.getElementById('ot-toggle').checked) {
                 const val = parseFloat(document.getElementById('ot-hours').value); otH = isNaN(val) || val < 0 ? 0 : val;
             }
-            attendanceData[selectedDayKey] = {
+            
+            let targetData = {
                 status: selectedStatusStr || 'none',
                 shiftHours: parseFloat(document.getElementById('shift-hours').value) || 8,
                 ot: otH, otMult: parseFloat(document.getElementById('ot-multiplier').value) || 1.5
             };
-            localStorage.setItem('cybercore_pro_attendance', JSON.stringify(attendanceData));
-            renderCalendar(); updateStats(); closeModal();
-            
-            // Kích hoạt/Cập nhật lại lịch đếm ngược thông báo lúc bấm lưu
-            schedule23hNotification();
+
+            // Lưu trực tiếp vào IndexedDB của trình duyệt hệ thống
+            let tx = db.transaction("attendance", "readwrite");
+            tx.objectStore("attendance").put(targetData, selectedDayKey);
+
+            tx.onsuccess = function() {
+                attendanceData[selectedDayKey] = targetData;
+                renderCalendar(); updateStats(); closeModal();
+            };
         }
 
-        window.onload = function() { 
+        // Khởi động đồng bộ chuỗi dữ liệu khi tải trang
+        window.onload = async function() { 
+            await initDB();
+            await loadDataFromDB();
             renderCalendar(); 
             updateStats(); 
-            // Xin quyền và chạy kích hoạt thông báo ngầm ngay khi load xong app
-            if ("Notification" in window && Notification.permission !== "granted") {
-                Notification.requestPermission().then(() => { schedule23hNotification(); });
-            } else {
-                schedule23hNotification();
-            }
         };
     </script>
 </body>
