@@ -130,7 +130,7 @@
                     <input type="checkbox" id="ot-toggle" onchange="toggleOTField()" class="w-5 h-5 text-amber-500 bg-slate-800 border-slate-600 rounded accent-amber-500">
                 </div>
                 <div id="ot-input-container" class="hidden">
-                    <input type="number" id="ot-hours" min="0" max="24" step="0.5" placeholder="Nhập số giờ (VD: 2.5)" 
+                    <input type="number" id="ot-hours" min="0" max="24" step="0.5" placeholder="Nhập số giờ tăng ca" 
                            class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2.5 px-4 text-base font-bold text-amber-400 focus:outline-none focus:border-amber-500">
                 </div>
             </div>
@@ -244,7 +244,10 @@
                 let dayBg = "bg-slate-800/20 border-slate-800/60"; let earningsText = "";
 
                 if (record.status === 'work') {
-                    const dayEarning = (parseFloat(record.shiftHours || 8) * hourlyRate) + (parseFloat(record.ot || 0) * hourlyRate * parseFloat(record.otMult || 1.5));
+                    const mainHoursEarn = parseFloat(record.shiftHours || 8) * hourlyRate;
+                    const otEarn = parseFloat(record.ot || 0) * hourlyRate * parseFloat(record.otMult || 1.5);
+                    const dayEarning = mainHoursEarn + otEarn;
+
                     statusMarkup = `<span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20 font-bold uppercase tracking-wider">Đi làm</span>`;
                     dayBg = "bg-emerald-950/15 border-emerald-900/30";
                     earningsText = `<p class="text-xs font-black text-emerald-400 text-right">+${dayEarning.toLocaleString('vi-VN')}đ</p>`;
@@ -257,7 +260,12 @@
                 }
 
                 let badgesMarkup = `<span class="text-[9px] bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 font-semibold">${record.shiftHours || 8}h chính</span>`;
-                if (record.ot > 0) badgesMarkup += `<span class="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30 font-extrabold ml-1.5">OT +${record.ot}h (x${record.otMult || 1.5})</span>`;
+                
+                // ĐÃ SỬA: Tính rõ số tiền tăng ca thực tế thay vì chỉ hiện hệ số x1.5 hoặc x2.0
+                if (record.ot > 0) {
+                    const actualOtMoney = parseFloat(record.ot) * hourlyRate * parseFloat(record.otMult || 1.5);
+                    badgesMarkup += `<span class="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30 font-extrabold ml-1.5">Tăng ca +${actualOtMoney.toLocaleString('vi-VN')}đ (+${record.ot}h)</span>`;
+                }
 
                 const isToday = (d === currentDateNum);
                 const cardRow = document.createElement('div');
